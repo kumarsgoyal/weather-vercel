@@ -18,6 +18,14 @@ const buildUrl = (type, params) => {
 };
 
 export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   const { type, lat, lon, query } = req.query;
 
   const API_KEY = process.env.OPENWEATHER_API_KEY;
@@ -30,6 +38,14 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(`${url}&appid=${API_KEY}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        error: "OpenWeather API error",
+        details: errorText,
+      });
+    }
+
     const data = await response.json();
 
     res.status(200).json(data);
